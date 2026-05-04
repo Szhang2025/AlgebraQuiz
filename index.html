@@ -17,13 +17,11 @@
             min-height: 100vh;
         }
 
-        /* main app container */
         .app-container {
             max-width: 1100px;
             margin: 0 auto;
         }
 
-        /* tutorial section */
         .tutorial-container {
             background: white;
             border-radius: 2rem;
@@ -333,29 +331,90 @@
             100% { transform: rotate(360deg); }
         }
 
-        .toggle-tutorial {
-            background: #e2e8f0;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 30px;
-            margin-bottom: 15px;
-            cursor: pointer;
-            font-weight: 500;
+        .dashboard-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #1a5f7a;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background 0.2s;
         }
-
-        .formula {
-            font-family: monospace;
-            background: #1e1e2e;
-            color: #bbf0ff;
-            padding: 0.2rem 0.5rem;
-            border-radius: 6px;
+        .dashboard-btn:hover {
+            background-color: #0e3e52;
+        }
+        
+        /* Key Modal Styles */
+        .key-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+        .key-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+        }
+        .key-modal-input {
+            width: 100%;
+            padding: 12px;
+            margin: 16px 0;
+            border: 2px solid #ccc;
+            border-radius: 40px;
+            text-align: center;
             font-size: 1rem;
+        }
+        .key-modal-error {
+            color: #d32f2f;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+            min-height: 40px;
+        }
+        .key-modal-btn {
+            background: #0f6b9c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            width: 100%;
+            margin-bottom: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .key-modal-btn:hover {
+            background: #0a5379;
+        }
+        .key-modal-close {
+            background: #f0f0f0;
+            border: none;
+            padding: 8px;
+            border-radius: 40px;
+            width: 100%;
+            cursor: pointer;
+        }
+        .key-hint {
+            font-size: 0.7rem;
+            margin-top: 12px;
+            color: #666;
         }
     </style>
 </head>
 <body>
 <div class="app-container">
-    <!-- TUTORIAL SECTION - Introduction to Algebra -->
+    <!-- TUTORIAL SECTION -->
     <div class="tutorial-container" id="tutorialSection">
         <div class="tutorial-header">
             <h2>📘 Welcome to Algebra Basics</h2>
@@ -417,7 +476,7 @@
         </div>
     </div>
 
-    <!-- QUIZ SECTION (same as before, with shuffled answers and full functionality) -->
+    <!-- QUIZ SECTION -->
     <div class="quiz-container" id="quizApp">
         <div class="hero">
             <h1>📐 MATH101: Algebra Basics Quiz <span id="securityIndicator" class="security-status">🔒 Key Required</span></h1>
@@ -457,9 +516,10 @@
 
 <script>
     // ============================================================
-    // CONFIGURATION (Your working Web App URL)
+    // CONFIGURATION 
     // ============================================================
     const GOOGLE_SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby6asS7GS9FeX0nXl5k4acK4f-5S74yVT7oGn0GCaHJteEJHQHFnNC6_sioa4aTtooM_w/exec";
+    const DASHBOARD_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRqlmd9Kqm3QFRUQwQxnElvNRMObG6fAPEM1iq65ysnG27EqYeJ8mbabGU6reSb5AEb0O1e5bugf4yU/pubhtml?gid=2007250582&single=true";
     
     // ============================================================
     // SECURITY KEYS
@@ -551,7 +611,7 @@
     }
 
     // ============================================================
-    // ORIGINAL 50 QUESTIONS (based on algebra concepts)
+    // 50 QUESTIONS
     // ============================================================
     const originalQuestions = [
         { text: "Solve for x: 2x + 5 = 15", options: ["x = 5", "x = 10", "x = 4", "x = 6"], correctIndex: 0 },
@@ -606,7 +666,6 @@
         { text: "Simplify: 4x + 2x", options: ["6x", "8x", "4x²", "2x"], correctIndex: 0 }
     ];
 
-    // Shuffle answers for each question (so correct option isn't always 'A')
     function shuffleQuestion(question) {
         const indices = [0, 1, 2, 3];
         for (let i = indices.length - 1; i > 0; i--) {
@@ -633,7 +692,7 @@
     let quizSubmitted = false;
     let keyManager = new SecretKeyManager();
 
-    // DOM Elements (quiz)
+    // DOM Elements
     const questionTextEl = document.getElementById("questionText");
     const optionsContainer = document.getElementById("optionsContainer");
     const prevBtn = document.getElementById("prevBtn");
@@ -740,7 +799,10 @@
         }
         setTimeout(() => {
             hideLoadingOverlay();
-            messageDiv.innerHTML = `✅ Success! Score: ${correctCount}/50 recorded.`;
+            messageDiv.innerHTML = `✅ Success! Score: ${correctCount}/50 recorded.<br><br>
+                <a href="${DASHBOARD_URL}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #1a5f7a; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    📊 View Class Results Dashboard
+                </a>`;
             messageDiv.style.background = "#d4edda";
         }, 800);
         localStorage.removeItem("math101_progress");
@@ -749,7 +811,9 @@
 
     function enableQuizInterface() {
         quizBodyDiv.classList.remove("disabled");
-        prevBtn.disabled = nextBtn.disabled = submitBtn.disabled = false;
+        prevBtn.disabled = false;
+        nextBtn.disabled = false;
+        submitBtn.disabled = false;
         securityIndicator.innerHTML = "🔓 Key Active";
         securityIndicator.style.background = "#2e7d32";
         keyBadgeContainer.innerHTML = `<span class="key-badge">🔑 ${keyManager.getKeyType()} access</span>`;
@@ -759,36 +823,87 @@
         renderCurrentQuestion();
         updateStats();
     }
+
     function disableQuizInterface() {
         quizBodyDiv.classList.add("disabled");
-        prevBtn.disabled = nextBtn.disabled = submitBtn.disabled = true;
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+        submitBtn.disabled = true;
         securityIndicator.innerHTML = "🔒 Key Required";
         securityIndicator.style.background = "#2c5a2e";
         keyBadgeContainer.innerHTML = "";
+        messageDiv.innerHTML = "🔑 Enter your secret key to unlock the quiz.";
     }
+
+    // Show Key Modal - Fixed to ensure it displays properly
     function showKeyModal() {
+        // Remove any existing modal first
+        const existingModal = document.getElementById('keyModal');
+        if(existingModal) existingModal.remove();
+        
         const modalDiv = document.createElement('div');
-        modalDiv.style.cssText = `position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:flex; justify-content:center; align-items:center; z-index:10001;`;
-        const content = document.createElement('div');
-        content.style.cssText = `background:white; padding:2rem; border-radius:1.5rem; max-width:450px; width:90%; text-align:center;`;
-        content.innerHTML = `<h2>🔐 Secret Key Required</h2><p>Enter your MATH101 quiz key</p><input type="password" id="modalKeyInput" placeholder="e.g., FALL2026" style="width:100%; padding:12px; margin:16px 0; border-radius:40px; text-align:center;"><div id="modalError" style="color:#d32f2f;"></div><button id="modalSubmitBtn" style="background:#0f6b9c; color:white; padding:12px; width:100%; margin-bottom:8px; border-radius:40px;">Verify</button><button id="modalCloseBtn" style="background:#f0f0f0; padding:8px; width:100%; border-radius:40px;">Close</button><p style="font-size:0.7rem; margin-top:12px;">Use code: <strong>FALL2026</strong></p>`;
-        modalDiv.appendChild(content);
+        modalDiv.id = 'keyModal';
+        modalDiv.className = 'key-modal-overlay';
+        modalDiv.innerHTML = `
+            <div class="key-modal-content">
+                <h2>🔐 Secret Key Required</h2>
+                <p>Enter your MATH101 quiz key</p>
+                <input type="password" id="modalKeyInput" class="key-modal-input" placeholder="Enter key (e.g., FALL2026)" autocomplete="off">
+                <div id="modalError" class="key-modal-error"></div>
+                <button id="modalSubmitBtn" class="key-modal-btn">Verify & Unlock</button>
+                <button id="modalCloseBtn" class="key-modal-close">Close</button>
+                <div class="key-hint">Use code: <strong>FALL2026</strong> (classroom passcode)</div>
+            </div>
+        `;
         document.body.appendChild(modalDiv);
-        const input = document.getElementById('modalKeyInput'), err = document.getElementById('modalError');
+        
+        const input = document.getElementById('modalKeyInput');
+        const errorDiv = document.getElementById('modalError');
+        const submitBtnModal = document.getElementById('modalSubmitBtn');
+        const closeModal = document.getElementById('modalCloseBtn');
+        
         const submitHandler = async () => {
             const keyVal = input.value.trim();
-            if(!keyVal) { err.innerText = "Enter a key."; return; }
+            if(!keyVal) { 
+                errorDiv.innerText = "Please enter a key.";
+                errorDiv.style.color = "#d32f2f";
+                return; 
+            }
+            submitBtnModal.disabled = true;
+            submitBtnModal.innerText = "Verifying...";
             const result = await keyManager.validateKey(keyVal);
-            if(result.valid) { err.style.color="#2e7d32"; err.innerText="✓ Accepted!"; setTimeout(()=>{ modalDiv.remove(); enableQuizInterface(); }, 800); }
-            else { err.innerText = result.reason; input.value = ""; }
+            if(result.valid) {
+                errorDiv.style.color = "#2e7d32";
+                errorDiv.innerText = "✓ Key accepted! Loading quiz...";
+                setTimeout(() => {
+                    modalDiv.remove();
+                    enableQuizInterface();
+                }, 1000);
+            } else {
+                errorDiv.style.color = "#d32f2f";
+                errorDiv.innerText = result.reason;
+                submitBtnModal.disabled = false;
+                submitBtnModal.innerText = "Verify & Unlock";
+                input.value = "";
+                input.focus();
+            }
         };
-        document.getElementById('modalSubmitBtn').onclick = submitHandler;
+        
+        submitBtnModal.onclick = submitHandler;
         input.onkeypress = (e) => { if(e.key === 'Enter') submitHandler(); };
-        document.getElementById('modalCloseBtn').onclick = () => modalDiv.remove();
+        closeModal.onclick = () => modalDiv.remove();
         input.focus();
     }
-    if(keyManager.hasValidKey()) enableQuizInterface();
-    else { disableQuizInterface(); showKeyModal(); }
+
+    // Initialize
+    if(keyManager.hasValidKey()) {
+        enableQuizInterface();
+    } else {
+        disableQuizInterface();
+        // Small delay to ensure DOM is ready
+        setTimeout(() => showKeyModal(), 100);
+    }
+    
     prevBtn.onclick = goPrev;
     nextBtn.onclick = goNext;
     submitBtn.onclick = finalSubmit;
