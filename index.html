@@ -333,20 +333,28 @@
 
         .dashboard-btn {
             display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
+            margin-top: 10px;
+            padding: 12px 24px;
             background-color: #1a5f7a;
             color: white;
             text-decoration: none;
             border-radius: 8px;
             font-weight: bold;
             transition: background 0.2s;
+            font-size: 1rem;
         }
         .dashboard-btn:hover {
             background-color: #0e3e52;
         }
         
-        /* Key Modal Styles */
+        .result-container {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 1rem;
+        }
+        
         .key-modal-overlay {
             position: fixed;
             top: 0;
@@ -409,6 +417,11 @@
             font-size: 0.7rem;
             margin-top: 12px;
             color: #666;
+        }
+        
+        /* Results section - stays clickable even after quiz is disabled */
+        .results-section {
+            margin: 0 2rem 1.5rem 2rem;
         }
     </style>
 </head>
@@ -512,6 +525,9 @@
         </div>
         <footer>✨ Results are automatically saved to your instructor's Google Sheet.</footer>
     </div>
+    
+    <!-- Results section - separate from quiz body so it stays clickable -->
+    <div id="resultsSection" class="results-section" style="display: none;"></div>
 </div>
 
 <script>
@@ -710,6 +726,7 @@
     const studentClassInput = document.getElementById("studentClass");
     const studentSchoolInput = document.getElementById("studentSchool");
     const teacherNameInput = document.getElementById("teacherName");
+    const resultsSection = document.getElementById("resultsSection");
 
     totalQSpan.innerText = "50";
 
@@ -764,10 +781,25 @@
         const overlay = document.createElement('div');
         overlay.id = 'submitLoadingOverlay';
         overlay.className = 'loading-overlay';
-        overlay.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Submitting...</p></div>`;
+        overlay.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Submitting your quiz...</p></div>`;
         document.body.appendChild(overlay);
     }
     function hideLoadingOverlay() { const el = document.getElementById('submitLoadingOverlay'); if(el) el.remove(); }
+
+    function showResults(correctCount) {
+        resultsSection.style.display = "block";
+        resultsSection.innerHTML = `
+            <div class="result-container">
+                <h3>✅ Quiz Submitted Successfully!</h3>
+                <p style="font-size: 1.2rem; margin: 10px 0;"><strong>Your Score: ${correctCount}/50</strong> (${Math.round(correctCount/50*100)}%)</p>
+                <p>Your results have been recorded in the instructor's Google Sheet.</p>
+                <a href="${DASHBOARD_URL}" target="_blank" rel="noopener noreferrer" class="dashboard-btn">
+                    📊 View Class Performance Dashboard
+                </a>
+                <p style="font-size: 0.8rem; color: #666; margin-top: 15px;">The dashboard shows class averages and statistics (no individual data).</p>
+            </div>
+        `;
+    }
 
     async function finalSubmit() {
         if(quizSubmitted) return;
@@ -797,16 +829,15 @@
         if(GOOGLE_SHEETS_WEBAPP_URL && !GOOGLE_SHEETS_WEBAPP_URL.includes("YOUR_DEPLOYMENT_ID")) {
             fetch(GOOGLE_SHEETS_WEBAPP_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(e => console.log(e));
         }
+        
         setTimeout(() => {
             hideLoadingOverlay();
-            messageDiv.innerHTML = `✅ Success! Score: ${correctCount}/50 recorded.<br><br>
-                <a href="${DASHBOARD_URL}" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #1a5f7a; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                    📊 View Class Results Dashboard
-                </a>`;
-            messageDiv.style.background = "#d4edda";
+            // Hide the message div in the quiz area and show results separately
+            messageDiv.style.display = "none";
+            quizBodyDiv.classList.add("disabled");
+            showResults(correctCount);
         }, 800);
         localStorage.removeItem("math101_progress");
-        quizBodyDiv.classList.add("disabled");
     }
 
     function enableQuizInterface() {
@@ -818,6 +849,7 @@
         securityIndicator.style.background = "#2e7d32";
         keyBadgeContainer.innerHTML = `<span class="key-badge">🔑 ${keyManager.getKeyType()} access</span>`;
         messageDiv.innerHTML = "✅ Quiz unlocked! Answer all 50 questions.";
+        messageDiv.style.display = "block";
         if(!localStorage.getItem("quiz_start_time")) localStorage.setItem("quiz_start_time", Date.now());
         loadLocalProgress();
         renderCurrentQuestion();
@@ -833,11 +865,10 @@
         securityIndicator.style.background = "#2c5a2e";
         keyBadgeContainer.innerHTML = "";
         messageDiv.innerHTML = "🔑 Enter your secret key to unlock the quiz.";
+        messageDiv.style.display = "block";
     }
 
-    // Show Key Modal - Fixed to ensure it displays properly
     function showKeyModal() {
-        // Remove any existing modal first
         const existingModal = document.getElementById('keyModal');
         if(existingModal) existingModal.remove();
         
@@ -900,7 +931,6 @@
         enableQuizInterface();
     } else {
         disableQuizInterface();
-        // Small delay to ensure DOM is ready
         setTimeout(() => showKeyModal(), 100);
     }
     
